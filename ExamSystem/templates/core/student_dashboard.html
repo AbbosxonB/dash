@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Exam System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Student Dashboard</h2>
+        <p>Welcome, {{ user.username }}! You are logged in as {{ user.role }}.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Available Tests</h5>
+            </div>
+            <div class="card-body">
+                {% if available_tests %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Test Name</th>
+                                    <th>Subject</th>
+                                    <th>Time (min)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test in available_tests %}
+                                <tr>
+                                    <td>{{ test.test_name }}</td>
+                                    <td>{{ test.subject.name }}</td>
+                                    <td>{{ test.total_time_minutes }}</td>
+                                    <td>
+                                        <a href="{% url 'take_test' test.id %}" class="btn btn-success btn-sm">Take Test</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No tests are currently available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>My Results</h5>
+            </div>
+            <div class="card-body">
+                {% if student_results %}
+                    <ul class="list-group">
+                        {% for result in student_results|dictsortreversed:"completion_date" %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ result.test.test_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ result.completion_date|date:"M d, Y" }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary">{{ result.score_achieved }}/{{ result.total_score }}</span>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No test results yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
