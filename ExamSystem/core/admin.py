@@ -2,27 +2,19 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser, Subject, Test, Question, Answer, StudentResult
 
-
 class CustomUserAdmin(UserAdmin):
-    model = CustomUser
-    list_display = ('username', 'email', 'role', 'first_name', 'last_name', 'is_staff', 'is_active')
-    list_filter = ('role', 'is_staff', 'is_active', 'date_joined')
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    # Add 'role' to the standard fieldsets
+    fieldsets = UserAdmin.fieldsets + (
         ('Role Info', {'fields': ('role',)}),
     )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'role', 'is_active', 'is_staff'),
-        }),
+    # Add 'role' to the fields displayed on the user creation form
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (None, {'fields': ('role',)}),
     )
-    search_fields = ('username', 'email', 'first_name', 'last_name')
-    ordering = ('username',)
-
+    # Add 'role' to the columns displayed in the user list
+    list_display = ('username', 'email', 'role', 'is_staff')
+    # Add 'role' to the filters
+    list_filter = UserAdmin.list_filter + ('role',)
 
 class SubjectAdmin(admin.ModelAdmin):
     list_display = ('name', 'created_by', 'created_at')

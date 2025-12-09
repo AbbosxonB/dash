@@ -52,7 +52,11 @@
                 <h5>Quick Actions</h5>
             </div>
             <div class="card-body">
-                <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary">Manage Tests</a>
+                {% if user.role == 'Teacher' %}
+                    <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary">Manage Tests</a>
+                {% elif user.role == 'Admin' %}
+                    <a href="/admin/core/test/" class="btn btn-primary">Manage Tests</a>
+                {% endif %}
                 <a href="/admin/" class="btn btn-secondary">Manage Users (Admin Panel)</a>
             </div>
         </div>

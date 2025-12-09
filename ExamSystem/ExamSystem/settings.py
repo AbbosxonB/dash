@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',  # Our custom app
-    # 'rest_framework',  # Django REST Framework
-    # 'corsheaders',  # Django CORS headers
+    'rest_framework',  # Django REST Framework
+    'corsheaders',  # Django CORS headers
 ]
 
 MIDDLEWARE = [
@@ -48,8 +48,8 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -79,12 +79,8 @@ WSGI_APPLICATION = 'ExamSystem.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'exam_system_db',
-        'USER': 'postgres',
-        'PASSWORD': 'your_password_here',  # Replace with actual password
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

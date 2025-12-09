@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden
-from .models import CustomUser, Test, Subject, StudentResult
+from .models import CustomUser, Test, Subject, StudentResult, Question, Answer
 from .decorators import role_required, redirect_based_on_role
 
 
@@ -22,7 +22,7 @@ def login_view(request):
             
             # Redirect based on user role
             if user.role == 'Admin':
-                return redirect('admin_dashboard')  # This will be defined in URLs
+                return redirect('admindashboard')  # This will be defined in URLs
             elif user.role == 'Teacher':
                 return redirect('teacher_dashboard')
             elif user.role == 'Student':
@@ -51,7 +51,7 @@ def dashboard_view(request):
     user_role = request.user.role
     
     if user_role == 'Admin':
-        return redirect('admin_dashboard')
+        return redirect('admindashboard')
     elif user_role == 'Teacher':
         return redirect('teacher_dashboard')
     elif user_role == 'Student':
@@ -154,6 +154,7 @@ def create_test_view(request):
         
         for i, question_text in enumerate(question_texts):
             if question_text.strip():  # Only create if question text is not empty
+                from .models import Question, Answer # DIAGNOSTIC IMPORT
                 question_type = question_types[i] if i < len(question_types) else 'MCQ'
                 points_value = int(points_values[i]) if i < len(points_values) and points_values[i].isdigit() else 1
                 
