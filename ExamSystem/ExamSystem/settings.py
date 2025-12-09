@@ -38,12 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',  # Our custom app
-    'rest_framework',  # Django REST Framework
-    'corsheaders',  # Django CORS headers
+    # 'rest_framework',  # Django REST Framework
+    # 'corsheaders',  # Django CORS headers
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Add CORS middleware
+    # 'corsheaders.middleware.CorsMiddleware',  # Add CORS middleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
