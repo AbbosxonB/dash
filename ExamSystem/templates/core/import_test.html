@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Import Test - Exam System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3>Import Test from Excel</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" action="{% url 'import_test' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="test_name" class="form-label">Test Name</label>
+                        <input type="text" class="form-control" id="test_name" name="test_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject</label>
+                        <select class="form-select" id="subject" name="subject" required>
+                            <option value="">Select Subject</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="total_time_minutes" class="form-label">Total Time (minutes)</label>
+                        <input type="number" class="form-control" id="total_time_minutes" name="total_time_minutes" value="60" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="default_points_value" class="form-label">Points per Question (for all imported questions)</label>
+                        <input type="number" class="form-control" id="default_points_value" name="default_points_value" value="1" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="excel_file" class="form-label">Upload Excel File (Questions & Answers)</label>
+                        <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xlsx, .xls" required>
+                        <small class="form-text text-muted">
+                            Please upload an Excel file with **Multiple Choice Questions (MCQ)** and their answers.
+                            <a href="{% url 'download_sample_excel' %}" target="_blank">Download Sample Excel Format</a>
+                        </small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Import Test</button>
+                    <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

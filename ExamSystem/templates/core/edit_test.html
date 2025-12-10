@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Test - Exam System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Edit Test</h2>
+        <p>Welcome, {{ user.username }}! You are logged in as {{ user.role }}.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="test_name" class="form-label">Test Name</label>
+                        <input type="text" class="form-control" id="test_name" name="test_name" value="{{ test.test_name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject</label>
+                        <select class="form-control" id="subject" name="subject" required>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}" {% if subject.id == test.subject.id %}selected{% endif %}>{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="total_time_minutes" class="form-label">Total Time (minutes)</label>
+                        <input type="number" class="form-control" id="total_time_minutes" name="total_time_minutes" value="{{ test.total_time_minutes }}" min="1" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="Draft" {% if test.status == 'Draft' %}selected{% endif %}>Draft</option>
+                            <option value="Published" {% if test.status == 'Published' %}selected{% endif %}>Published</option>
+                            <option value="Archived" {% if test.status == 'Archived' %}selected{% endif %}>Archived</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="default_points_value" class="form-label">Points per Question</label>
+                        <input type="number" class="form-control" id="default_points_value" name="default_points_value" value="{{ test.questions.first.points_value|default:'1' }}" min="1" required>
+                    </div>
+                    
+                    <div id="questions-container">
+                        <h4>Questions</h4>
+                        
+                        {% for question in test.questions.all %}
+                        <div class="question-group mb-4 p-3 border rounded">
+                            <input type="hidden" name="question_id" value="{{ question.id }}">
+                            <div class="mb-3">
+                                <label class="form-label">Question Text</label>
+                                <textarea class="form-control question-text" name="question_text" rows="3" required>{{ question.question_text }}</textarea>
+                            </div>
+                            
+                            <div class="answers-container">
+                                <h5>Answers</h5>
+                                {% for answer in question.answers.all %}
+                                <div class="answer-group mb-2">
+                                    <input type="hidden" name="question_{{ forloop.parentloop.counter0 }}_answer_id" value="{{ answer.id }}">
+                                    <div class="row">
+                                        <div class="col-md-10">
+                                            <input type="text" class="form-control answer-text" name="question_{{ forloop.parentloop.counter0 }}_answer_text" placeholder="Answer text" value="{{ answer.answer_text }}" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input is-correct" type="checkbox" name="question_{{ forloop.parentloop.counter0 }}_is_correct" value="{{ forloop.counter0 }}" {% if answer.is_correct %}checked{% endif %}>
+                                                <label class="form-check-label">Correct</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <button type="button" class="btn btn-outline-secondary btn-sm add-answer-btn">Add Answer</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-primary mb-3" id="add-question-btn">Add Another Question</button>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-success">Update Test</button>
+                        <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let questionCount = {{ test.questions.all.count }};
+    
+    // Add question button functionality
+    document.getElementById('add-question-btn').addEventListener('click', function() {
+        const container = document.getElementById('questions-container');
+        const newQuestion = document.createElement('div');
+        newQuestion.className = 'question-group mb-4 p-3 border rounded';
+        newQuestion.innerHTML = `
+            <input type="hidden" name="question_id" value="">
+            <div class="mb-3">
+                <label class="form-label">Question Text</label>
+                <textarea class="form-control question-text" name="question_text" rows="3" required></textarea>
+            </div>
+            
+            <div class="answers-container">
+                <h5>Answers</h5>
+            </div>
+            
+            <button type="button" class="btn btn-outline-secondary btn-sm add-answer-btn">Add Answer</button>
+            <button type="button" class="btn btn-outline-danger btn-sm remove-question-btn ms-1">Remove Question</button>
+        `;
+        
+        container.appendChild(newQuestion);
+        questionCount++;
+        
+        // Add event listeners to the new buttons
+        newQuestion.querySelector('.add-answer-btn').addEventListener('click', addAnswerToQuestion);
+        newQuestion.querySelector('.remove-question-btn').addEventListener('click', function() {
+            newQuestion.remove();
+        });
+    });
+    
+    // Add answer button functionality for existing questions
+    document.querySelectorAll('.add-answer-btn').forEach(btn => {
+        btn.addEventListener('click', addAnswerToQuestion);
+    });
+    
+    // Function to add answer to a specific question
+    function addAnswerToQuestion() {
+        const questionGroup = this.closest('.question-group');
+        const answersContainer = questionGroup.querySelector('.answers-container');
+        const questionIndex = Array.from(document.querySelectorAll('.question-group')).indexOf(questionGroup);
+        
+        const answerCount = answersContainer.querySelectorAll('.answer-group').length;
+        const newAnswer = document.createElement('div');
+        newAnswer.className = 'answer-group mb-2';
+        newAnswer.innerHTML = `
+            <input type="hidden" name="question_${questionIndex}_answer_id" value="">
+            <div class="row">
+                <div class="col-md-10">
+                    <input type="text" class="form-control answer-text" name="question_${questionIndex}_answer_text" placeholder="Answer text" required>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check">
+                        <input class="form-check-input is-correct" type="checkbox" name="question_${questionIndex}_is_correct" value="${answerCount}">
+                        <label class="form-check-label">Correct</label>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        answersContainer.appendChild(newAnswer);
+    }
+    
+    // Add remove button functionality for existing questions
+    document.querySelectorAll('.question-group').forEach(questionGroup => {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-outline-danger btn-sm remove-question-btn ms-1';
+        removeBtn.textContent = 'Remove Question';
+        removeBtn.addEventListener('click', function() {
+            questionGroup.remove();
+        });
+        questionGroup.appendChild(removeBtn);
+    });
+});
+</script>
+{% endblock %}

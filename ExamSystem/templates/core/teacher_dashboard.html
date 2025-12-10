@@ -15,7 +15,10 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5>My Tests</h5>
-                <a href="{% url 'create_test' %}" class="btn btn-primary btn-sm">Create New Test</a>
+                <div>
+                    <a href="{% url 'create_test' %}" class="btn btn-primary btn-sm">Create New Test</a>
+                    <a href="{% url 'import_test' %}" class="btn btn-secondary btn-sm ms-2">Import Test</a>
+                </div>
             </div>
             <div class="card-body">
                 {% if tests %}
@@ -28,6 +31,7 @@
                                     <th>Status</th>
                                     <th>Time (min)</th>
                                     <th>Created</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -45,6 +49,13 @@
                                     </td>
                                     <td>{{ test.total_time_minutes }}</td>
                                     <td>{{ test.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'edit_test' test.id %}" class="btn btn-sm btn-info">Edit</a>
+                                        <form action="{% url 'delete_test' test.id %}" method="post" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

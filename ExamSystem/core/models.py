@@ -74,12 +74,18 @@ class Answer(models.Model):
 
 
 class StudentResult(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Completed', 'Completed'),
+    ]
+
     student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='results')
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='results')
-    score_achieved = models.FloatField(default=0.0)
-    total_score = models.FloatField(default=0.0)
-    time_taken = models.IntegerField()  # Time in seconds
-    completion_date = models.DateTimeField(default=timezone.now)
+    score_achieved = models.FloatField(default=0.0, null=True, blank=True)
+    total_score = models.FloatField(default=0.0, null=True, blank=True)
+    time_taken = models.IntegerField(default=0, null=True, blank=True)  # Time in seconds
+    completion_date = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
     
     def __str__(self):
-        return f"{self.student.username} - {self.test.test_name}: {self.score_achieved}/{self.total_score}"
+        return f"{self.student.username} - {self.test.test_name}: {self.score_achieved}/{self.total_score} ({self.status})"

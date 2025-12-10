@@ -45,6 +45,11 @@
                         </select>
                     </div>
                     
+                    <div class="mb-3">
+                        <label for="default_points_value" class="form-label">Points per Question</label>
+                        <input type="number" class="form-control" id="default_points_value" name="default_points_value" value="1" min="1" required>
+                    </div>
+
                     <div id="questions-container">
                         <h4>Questions</h4>
                         
@@ -52,20 +57,6 @@
                             <div class="mb-3">
                                 <label class="form-label">Question Text</label>
                                 <textarea class="form-control question-text" name="question_text" rows="3" required></textarea>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Question Type</label>
-                                <select class="form-control question-type" name="question_type">
-                                    <option value="MCQ">Multiple Choice</option>
-                                    <option value="TF">True/False</option>
-                                    <option value="ESSAY">Essay</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Points Value</label>
-                                <input type="number" class="form-control points-value" name="points_value" value="1" min="1">
                             </div>
                             
                             <div class="answers-container">
@@ -131,6 +122,7 @@
                         </div>
                     </div>
                     
+                    
                     <button type="button" class="btn btn-outline-primary mb-3" id="add-question-btn">Add Another Question</button>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -156,20 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="mb-3">
                 <label class="form-label">Question Text</label>
                 <textarea class="form-control question-text" name="question_text" rows="3" required></textarea>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Question Type</label>
-                <select class="form-control question-type" name="question_type">
-                    <option value="MCQ">Multiple Choice</option>
-                    <option value="TF">True/False</option>
-                    <option value="ESSAY">Essay</option>
-                </select>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Points Value</label>
-                <input type="number" class="form-control points-value" name="points_value" value="1" min="1">
             </div>
             
             <div class="answers-container">
