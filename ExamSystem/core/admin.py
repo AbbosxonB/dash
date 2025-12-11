@@ -12,7 +12,7 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('role',)}),
     )
     # Add 'role' to the columns displayed in the user list
-    list_display = ('username', 'email', 'role', 'is_staff')
+    list_display = ('username', 'email', 'role', 'is_staff', 'student_groups', 'student_password', 'student_full_name')
     # Add 'role' to the filters
     list_filter = UserAdmin.list_filter + ('role',)
 

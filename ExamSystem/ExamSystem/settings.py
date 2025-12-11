@@ -83,6 +83,23 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+# settings.py faylida DATABASES qismi
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',  # MySQL drayveri
+#         'NAME': 'users',           # 2-Qadamda yaratilgan baza nomi
+#         'USER': 'root',                # 2-Qadamda yaratilgan foydalanuvchi nomi
+#         'PASSWORD': '',     # Foydalanuvchi paroli
+#         'HOST': 'localhost',                  # MySQL joylashgan server (odatda localhost)
+#         'PORT': '3306',                       # MySQL ning standart porti
+        
+#         # MySQL xatolarini oldini olish uchun qo'shimcha sozlamalar
+#         'OPTIONS': {
+#             'init_command': "SET default_storage_engine=INNODB",
+#             'charset': 'utf8mb4', # To'liq Unicodedan foydalanish uchun (emoji va h.k.)
+#         }
+#     }
+# }
 
 
 # Password validation
