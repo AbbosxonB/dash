@@ -431,7 +431,7 @@ def submit_test_view(request, test_id):
         test=test, 
         status='Pending'
     ).first()
-
+    total_score = 25
     if student_result:
         # Update the existing pending result
         student_result.score_achieved = score

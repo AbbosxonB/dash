@@ -10,83 +10,15 @@
     </div>
 </div>
 
-<style>
-    @media (min-width: 768px) {
-        .test-timer {
-            position: fixed;
-            top: 70px; /* Adjusted to be below a typical header and allow space */
-            right: 15px;
-            padding: 10px;
-            border-radius: .25rem;
-            z-index: 1050;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-        .question-nav {
-            position: fixed;
-            top: 130px;
-            left: 1400px; /* Below the timer, adjust if timer height changes */
-            right: 15px;
-            padding: 10px;
-            border-radius: .25rem;
-            z-index: 1050;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            max-height: calc(100vh - 145px); /* Max height to fit viewport, considering header, timer, and some buffer */
-            overflow-y: auto; /* Enable scrolling for navigation if many questions */
-        }
-        .main-question-content-wrapper {
-            margin-right: 280px; /* Space for fixed elements (250px width + 30px buffer for padding) */
-        }
-    }
-    /* Add some basic styling for the nav buttons to make them more visually distinct */
-    .question-nav .nav-item {
-        margin: 3px !important;
-        border: 1px solid #007bff; /* Primary color border */
-    }
-    .question-nav .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-        color: #fff;
-    }
-    .question-nav .btn-info {
-        background-color: #17a2b8;
-        border-color: #17a2b8;
-        color: #fff;
-    }
-    .question-nav .btn-outline-light {
-        background-color: #f8f9fa; /* Light grey for unanswered */
-        border-color: #ced4da; /* Grey border */
-        color: #495057;
-    }
-</style>
-
 <form method="post" id="test-form" action="{% url 'submit_test' test.id %}">
     {% csrf_token %}
-
-    <!-- Hidden input to store time taken -->
     <input type="hidden" name="time_taken" id="time_taken" value="0">
 
-    <!-- Timer Display -->
-    <div class="test-timer">
-        <div id="timer">Time remaining: <span id="time-display">{{ test.total_time_minutes }}:00</span></div>
-    </div>
-
-    <!-- Question Navigation -->
-    <div class="question-nav">
-        <h6>Question Navigation (<span id="answered-count">0</span> / {{ questions|length }})</h6>
-        <div class="d-flex flex-wrap">
+    <div class="row">
+        <!-- Main Content: Questions -->
+        <div class="col-md-10">
             {% for question in questions %}
-                <a href="#question-{{ question.id }}" class="btn btn-sm btn-outline-light m-1 nav-item" onclick="highlightQuestion({{ question.id }})">
-                    {{ forloop.counter }}
-                </a>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="row mt-5">
-        <div class="main-question-content-wrapper">
-            <!-- Removed <div class="col-md-9"> -->
-            {% for question in questions %}
-            <div class="card question-card" id="question-{{ question.id }}">
+            <div class="card mb-3" id="question-{{ question.id }}">
                 <div class="card-body">
                     <h5 class="card-title">Question {{ forloop.counter }}: {{ question.question_text }}</h5>
                     <p class="card-text"><small class="text-muted">Points: {{ question.points_value }}</small></p>
@@ -116,159 +48,153 @@
             </div>
             {% endfor %}
 
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-success btn-lg" id="submit-btn">Submit Test</button>
                 <a href="{% url 'student_dashboard' %}" class="btn btn-secondary">Cancel Test</a>
             </div>
+        </div>
 
+        <!-- Sidebar: Timer and Navigation -->
+        <div class="col-md-2">
+            <div class="sticky-top">
+                <!-- Timer Display -->
+                <div class="card mb-3">
+                    <div class="card-header">Time Remaining</div>
+                    <div class="card-body text-center">
+                        <h4 id="time-display">{{ test.total_time_minutes }}:00</h4>
+                    </div>
+                </div>
 
+                <!-- Question Navigation -->
+                <div class="card">
+                    <div class="card-header">
+                        Question Navigation (<span id="answered-count">0</span>/{{ questions|length }})
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap">
+                            {% for question in questions %}
+                                <a href="#question-{{ question.id }}" class="btn btn-sm btn-outline-secondary m-1 nav-item" id="nav-btn-{{ question.id }}" onclick="highlightQuestion('{{ question.id }}', event)">
+                                    {{ forloop.counter }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </form>
 
+
 <script>
-let totalTestMinutes = parseInt("{{ test.total_time_minutes }}");
-if (isNaN(totalTestMinutes) || totalTestMinutes <= 0) {
-    totalTestMinutes = 0; // Default to 0 minutes if invalid or not set
-}
-
-let timeRemaining = totalTestMinutes * 60; // Convert to seconds
-let timerInterval;
-
-const answeredQuestions = new Set(); // Store question IDs of answered questions
-
-function updateAnsweredState() {
-    answeredQuestions.clear(); // Clear and re-evaluate all questions
-    document.querySelectorAll('.question-card').forEach(questionCard => {
-        const questionId = questionCard.id.replace('question-', '');
-        let isAnswered = false;
-
-        // Check for radio buttons (MCQ, TF)
-        const radioInputs = questionCard.querySelectorAll(`input[type="radio"][name="question_${questionId}"]`);
-        if (radioInputs.length > 0) {
-            for (const radio of radioInputs) {
-                if (radio.checked) {
-                    isAnswered = true;
-                    break;
-                }
-            }
-        }
-
-        // Check for textarea (ESSAY)
-        const textareaInput = questionCard.querySelector(`textarea[name="question_${questionId}"]`);
-        if (textareaInput && textareaInput.value.trim() !== '') {
-            isAnswered = true;
-        }
-
-        const navBtn = document.querySelector(`.question-nav a[href="#question-${questionId}"]`);
-        if (navBtn) {
-            // Remove previous answered/highlighted states
-            navBtn.classList.remove('btn-info', 'btn-primary', 'btn-outline-light');
-
-            if (isAnswered) {
-                answeredQuestions.add(questionId);
-                // If it's the currently highlighted question, it will be primary, otherwise info
-                if (navBtn.getAttribute('href') === window.location.hash) { // Check if it's the current hash
-                    navBtn.classList.add('btn-primary');
-                } else {
-                    navBtn.classList.add('btn-info');
-                }
-            } else {
-                answeredQuestions.delete(questionId);
-                // If it's the currently highlighted question, it will be primary, otherwise outline-light
-                if (navBtn.getAttribute('href') === window.location.hash) {
-                    navBtn.classList.add('btn-primary');
-                } else {
-                    navBtn.classList.add('btn-outline-light');
-                }
-            }
-        }
-    });
-
-    // Update the displayed count
-    document.getElementById('answered-count').textContent = answeredQuestions.size;
-}
-
-function updateTimer() {
-    const minutes = Math.floor(timeRemaining / 60);
-    const seconds = timeRemaining % 60;
-
-    document.getElementById('time-display').textContent =
-        minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
-
-    // Update hidden field with time taken
-    const timeTaken = (totalTestMinutes * 60) - timeRemaining;
-    document.getElementById('time_taken').value = timeTaken;
-
-    if (timeRemaining <= 0) {
-        // Time's up! Submit the form automatically
-        clearInterval(timerInterval);
-        document.getElementById('test-form').submit();
-    }
-
-    timeRemaining--;
-}
-
-// Start the timer only if timeRemaining is positive
-if (timeRemaining > 0) {
-    timerInterval = setInterval(updateTimer, 1000);
-} else {
-    // If no time is set, display 00:00 and disable submission if desired, or handle appropriately
-    document.getElementById('time-display').textContent = '00:00';
-}
-// Function to highlight the selected question in navigation
-function highlightQuestion(questionId) {
-    // Remove highlight from all nav items, reverting them to answered (btn-info) or unanswered (btn-outline-light) state
-    document.querySelectorAll('.question-nav .btn').forEach(btn => {
-        const btnQuestionId = btn.getAttribute('href').replace('#question-', '');
-        if (answeredQuestions.has(btnQuestionId)) {
-            btn.classList.remove('btn-primary', 'btn-outline-light');
-            btn.classList.add('btn-info');
-        } else {
-            btn.classList.remove('btn-primary', 'btn-info');
-            btn.classList.add('btn-outline-light');
-        }
-    });
-
-    // Add highlight to the clicked question
-    const navBtn = document.querySelector(`[href="#question-${questionId}"]`);
-    if (navBtn) {
-        navBtn.classList.remove('btn-outline-light', 'btn-info'); // Remove previous states
-        navBtn.classList.add('btn-primary'); // Set to primary
-    }
-
-    // Scroll to the question
-    document.getElementById(`question-${questionId}`).scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-    });
-}
-
-// Handle form submission confirmation
-document.getElementById('test-form').addEventListener('submit', function(e) {
-    if (!confirm('Are you sure you want to submit your test?')) {
-        e.preventDefault();
-    }
-});
-
-// Update time taken field on form submission
-document.getElementById('test-form').addEventListener('submit', function() {
-    // Calculate and update the time taken before submission
-    const timeTaken = (totalTestMinutes * 60) - timeRemaining;
-    document.getElementById('time_taken').value = timeTaken;
-});
-
-// Add event listeners to update answered state
 document.addEventListener('DOMContentLoaded', () => {
-    // For radio buttons
-    document.querySelectorAll('input[type="radio"]').forEach(radio => {
-        radio.addEventListener('change', updateAnsweredState);
+    const testForm = document.getElementById('test-form');
+    const timeDisplay = document.getElementById('time-display');
+    const timeTakenInput = document.getElementById('time_taken');
+    const answeredCountEl = document.getElementById('answered-count');
+
+    let totalTestMinutes = parseInt("{{ test.total_time_minutes }}");
+    if (isNaN(totalTestMinutes) || totalTestMinutes <= 0) {
+        totalTestMinutes = 0;
+    }
+
+    let timeRemaining = totalTestMinutes * 60; // in seconds
+    let timerInterval;
+    const questions = document.querySelectorAll('.card[id^="question-"]');
+
+    function updateAnsweredState() {
+        let answeredCount = 0;
+        questions.forEach(questionCard => {
+            const questionId = questionCard.id.replace('question-', '');
+            let isAnswered = false;
+
+            const radioInputs = questionCard.querySelectorAll(`input[type="radio"][name="question_${questionId}"]`);
+            if (radioInputs.length > 0) {
+                if (Array.from(radioInputs).some(radio => radio.checked)) {
+                    isAnswered = true;
+                }
+            }
+
+            const textareaInput = questionCard.querySelector(`textarea[name="question_${questionId}"]`);
+            if (textareaInput && textareaInput.value.trim() !== '') {
+                isAnswered = true;
+            }
+
+            const navBtn = document.getElementById(`nav-btn-${questionId}`);
+            if (navBtn) {
+                if (isAnswered) {
+                    answeredCount++;
+                    navBtn.classList.add('btn-info');
+                    navBtn.classList.remove('btn-outline-secondary');
+                } else {
+                    navBtn.classList.remove('btn-info');
+                    navBtn.classList.add('btn-outline-secondary');
+                }
+            }
+        });
+        answeredCountEl.textContent = answeredCount;
+    }
+
+    window.highlightQuestion = (questionId, event) => {
+        if(event) event.preventDefault();
+        
+        // Update active visual for nav buttons
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.classList.remove('btn-primary');
+        });
+        const navBtn = document.getElementById(`nav-btn-${questionId}`);
+        if (navBtn) {
+            navBtn.classList.add('btn-primary');
+        }
+
+        // Scroll question into view
+        const questionEl = document.getElementById(`question-${questionId}`);
+        if(questionEl) {
+            questionEl.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    };
+    
+    function updateTimer() {
+        const minutes = Math.floor(timeRemaining / 60);
+        let seconds = timeRemaining % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+
+        timeDisplay.textContent = `${minutes}:${seconds}`;
+        timeTakenInput.value = (totalTestMinutes * 60) - timeRemaining;
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            alert("Time's up! Submitting your test.");
+            testForm.submit();
+        }
+        timeRemaining--;
+    }
+
+    if (timeRemaining > 0) {
+        timerInterval = setInterval(updateTimer, 1000);
+    } else {
+        timeDisplay.textContent = '0:00';
+    }
+
+    testForm.addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to submit your test?')) {
+            e.preventDefault();
+        } else {
+            clearInterval(timerInterval); // Stop timer on manual submit
+            timeTakenInput.value = (totalTestMinutes * 60) - timeRemaining;
+        }
     });
 
-    // For textareas
-    document.querySelectorAll('textarea').forEach(textarea => {
-        textarea.addEventListener('input', updateAnsweredState);
+    // Add event listeners to form inputs to track answered status
+    testForm.querySelectorAll('input[type="radio"], textarea').forEach(input => {
+        input.addEventListener('input', updateAnsweredState);
+        input.addEventListener('change', updateAnsweredState);
     });
 
-    // Initial call to set the state on page load
+    // Initial state update
     updateAnsweredState();
 });
 </script>
