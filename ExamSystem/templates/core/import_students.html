@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Import Students{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Import Students from Excel</h2>
+        </div>
+        <div class="card-body">
+            <p>Upload an Excel file with student data to import them into the system.</p>
+            <p>The Excel file must have the following columns in this exact order: <strong>student_id, full_name, passport_series, course, group, direction</strong>.</p>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="excel_file" class="form-label">Excel File</label>
+                    <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xls,.xlsx" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Import Students</button>
+                <a href="{% url 'download_sample_student_excel' %}" class="btn btn-secondary">Download Sample Excel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

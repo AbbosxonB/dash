@@ -735,3 +735,87 @@ def download_sample_excel(request):
     response['Content-Disposition'] = 'attachment; filename=sample_test_import.xlsx'
     wb.save(response)
     return response
+
+
+@role_required(['Admin'])
+def import_students_view(request):
+    """
+    View for admins to import students from an Excel file.
+    """
+    if request.method == 'POST':
+        excel_file = request.FILES.get('excel_file')
+
+        if not excel_file:
+            messages.error(request, 'Excel file is required.')
+            return redirect('import_students')
+
+        if not excel_file.name.endswith(('.xls', '.xlsx')):
+            messages.error(request, 'Invalid file type. Please upload an Excel file (.xls or .xlsx).')
+            return redirect('import_students')
+
+        try:
+            df = pd.read_excel(excel_file)
+            
+            required_columns = ['student_id', 'full_name', 'passport_series', 'course', 'group', 'direction']
+            if not all(col in df.columns for col in required_columns):
+                messages.error(request, f'Excel file must contain the following columns: {", ".join(required_columns)}')
+                return redirect('import_students')
+
+            for index, row in df.iterrows():
+                student_id = row['student_id']
+                full_name = row['full_name']
+                passport_series = row['passport_series']
+                course = row['course']
+                group = row['group']
+                direction = row['direction']
+
+                if CustomUser.objects.filter(username=student_id).exists():
+                    messages.warning(request, f'Student with ID {student_id} already exists. Skipping.')
+                    continue
+
+                user = CustomUser.objects.create_user(
+                    username=student_id,
+                    password=str(passport_series),
+                    role='Student',
+                    student_id=student_id,
+                    student_full_name=full_name,
+                    course=course,
+                    student_groups=group,
+                    student_direction=direction
+                )
+                user.save()
+
+            messages.success(request, f'Successfully imported {len(df)} students.')
+            return redirect('admindashboard')
+
+        except Exception as e:
+            messages.error(request, f'Error importing students: {e}')
+            return redirect('import_students')
+
+    return render(request, 'core/import_students.html', {'user_role': request.user.role})
+
+
+@role_required(['Admin'])
+def download_sample_student_excel(request):
+    """
+    Generates and serves a sample Excel file for student import.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Students"
+
+    ws.append([
+        'student_id', 'full_name', 'passport_series', 'course', 'group', 'direction'
+    ])
+
+    ws.append([
+        '123456', 'John Doe', 'AB1234567', '2', 'A', 'Computer Science'
+    ])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = 'attachment; filename=sample_student_import.xlsx'
+    wb.save(response)
+    return response
+

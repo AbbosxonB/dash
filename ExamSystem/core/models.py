@@ -18,6 +18,7 @@ class CustomUser(AbstractUser):
     student_full_name = models.CharField(max_length=200, blank=True, null=True)
     student_groups = models.CharField(max_length=200, blank=True, null=True)
     course = models.CharField(max_length=200, blank=True, null=True)
+    student_direction = models.CharField(max_length=200, blank=True, null=True)
 
 
     def __str__(self):
